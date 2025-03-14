@@ -1,5 +1,5 @@
-use ndarray::Array2;
 use crate::activation_functions::activation_function::ActivationFunction;
+use ndarray::Array2;
 
 pub struct Linear;
 
