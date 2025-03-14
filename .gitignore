@@ -3,6 +3,7 @@
 
 # Output
 loss.csv
+loss_plot.png
 
 # Rust
 /target

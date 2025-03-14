@@ -7,6 +7,7 @@ use crate::networks::Network;
 use csv;
 use indicatif::{ProgressBar, ProgressStyle};
 use ndarray::Array2;
+use plotters::prelude::*;
 
 const LEARNING_RATE: f64 = 5.0;
 const EPOCHS: usize = 1000;
@@ -17,13 +18,34 @@ const TRAINING_DATA: [([f64; 2], [f64; 1]); 4] = [
     ([1.0, 1.0], [0.0]),
 ];
 
-fn save_csv(data: Vec<f64>, filename: &str, header: &str) {
+fn save_csv(data: &Vec<f64>, filename: &str, header: &str) {
     let mut wtr = csv::Writer::from_path(filename).unwrap();
     wtr.write_record(&[header]).unwrap();
     for value in data {
         wtr.write_record(&[value.to_string()]).unwrap();
     }
     wtr.flush().unwrap();
+}
+
+fn plot_loss(loss_history: &Vec<f64>) -> Result<(), Box<dyn std::error::Error>> {
+    let root = BitMapBackend::new("loss_plot.png", (640, 480)).into_drawing_area();
+    root.fill(&WHITE)?;
+
+    let mut chart = ChartBuilder::on(&root)
+        .caption("Loss vs Epochs", ("sans-serif", 50).into_font())
+        .margin(10)
+        .x_label_area_size(30)
+        .y_label_area_size(30)
+        .build_cartesian_2d(0..loss_history.len(), 0.0..*loss_history.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap())?;
+
+    chart.configure_mesh().draw()?;
+
+    chart.draw_series(LineSeries::new(
+        (0..).zip(loss_history.iter()).map(|(x, y)| (x, *y)),
+        &RED,
+    ))?;
+
+    Ok(())
 }
 
 fn main() {
@@ -68,5 +90,6 @@ fn main() {
     // Save the loss history to a CSV file
     println!("======== Summary ========");
     println!("Final Loss: {:?}", loss_history.last().unwrap());
-    save_csv(loss_history, "loss.csv", "loss");
+    save_csv(&loss_history, "loss.csv", "loss");
+    plot_loss(&loss_history).unwrap();
 }
